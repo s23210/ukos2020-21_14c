@@ -1,0 +1,73 @@
+Żeby uruchomić jakikolwiek skrypt w PowerShell-u musi on być domyślnie podpisany przez Microsoft.
+Żeby to zmienić należy uruchomić PS'a z uprawnieniami admina oraz wpisać Set-ExectiutionPolicy Bypass.
+
+Żeby wyświetlić pomoc można użyć polecenia "Get-Help" (lub alias znany z linuxa, czyli polecenie "man"), natomiast aby zobaczyć przykłady użycia używa się "Get-Help" z poleceniem "-Examples".
+
+Komendy w PS mają pewną stałą konwencję nazewniczą. Jest to: Czasownik-NaCzymMaOperować.
+Np. "Get-ExecutionPolicy", "Set-ExecutionPolicy", "Find-Module", "Add-User", "Create-Item" itd...
+Nazwa zawsze jest zbudowana w ten sam sposób.
+
+PS ma wiele modułów, które są domyślnie zainstalowane ale nie uruchomione i trzeba je na żądanie ładować.
+Aby wyświetlić dostępne do załadowania moduły używa się polecenia "Get-Module -ListAvailable".
+
+Wynik polecenia można zapisać do zmiennej np. "$m = GetModule -ListAvailable".
+
+Wyniki poleceń można filtrować poprzez "Where-Object" lub jego alias "?":
+$m | ? {$\_.version -ge "3.0"} (Polecenie to zwróci tylko te moduły, których wersja jest >= 3.0
+
+Wyniki te można dalej filtrować poprzez pętlę ForEach-Object (alias - "%"), która wykonuje jakąś operację na każdym elemencie
+$m | ? {$\_.version -ge "3.0"} | % {Get-Command -Module $_.Name} (polecenie zwróci wszystkie polecenia w dostępnych modułach, których wersja jest >= 3.0)
+
+$m | ? {$_.Version -ge "3."} | % {Get-Command -Module $_.Name} | ? {($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} (polecenie zwróci wszystkie polecenia, które mają w nazwie "Add-" lub "Get-")
+
+Wyniki można przedstawić także w wygodniejszej formie tabelki graficznej w nowym oknie, używając polecenia Out-GridView:
+$m | ? {$_.Version -ge "3.0"} | % {Get-Command -Module $_.Name} | ? {($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-GridView
+
+Lub przekierować do pliku:
+$ListOfModules = "ListOfModules.txt"
+$m | ? {$_.Version -ge "3.0"} | % {Get-Command -Module $_.Name} | ? {($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-File $env:TEMP\$ListOfModules
+
+Wyniki można także tylko przetworzyć, bez wypisywania, poprzez Out-Null:
+$m | ? {$_.Version -ge "3.0"} | % {Get-Command -Module $_.Name} | ? {($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-Null
+
+Żeby załadować moduł, trzeba użyć polecenia "Import-Module" (lub alias - "ipmo")
+
+Zarządzanie przesyłem danych w tle.
+Służy do tego moduł BitsTransfer.
+
+ipmo BitsTransfer
+$url = "adres_z_plikiem_do_pobrania"
+cd $env:TEMP\destination_folder
+Start-BitsTransfer -Source $url -Destination $env:TEMP\destination_folder
+
+Przy zwykłym uruchomieniu pobierania, konsola zostaje zablokowana. Można to jednak obejść używając opcji -Asynchronus:
+Start-BitsTransfer -Source $url -Destination $env:TEMP\destination_folder\ -Asynchronous -DisplayName "transfer pliku"
+
+Można to także zapisać do zmiennej:
+$job = Start-BitsTransfer -Source $url -Destination $env:TEMP\destination_folder\ -Asynchronous -DisplayName "transfer pliku"
+
+Dane logowania można zapisać w bezpieczny sposób do zmiennej:
+$cred = Ger-Credential
+Oraz użyć przy rozpoczęciu transferu:
+$job = Start-BitsTransfer -Source $url -Destination $env:TEMP\destination_folder\ -Asynchronous -DisplayName "transfer pliku" -Credential $cred
+
+Aby zobaczyć stan transferów używa się polecenia "Get-BitsTransfer".
+
+Gdy plik zostanie pobrany (w kolumnie JobState będzie "Transferred"), plik nadal nie będzie dostępny w katalogu docelowym. Aby transfer ukończyć i dostać pobrany plik trzeba zakończyć transfer poprzez polecenie:
+Complete-BitsTransfer -BitsJob $job
+
+Do mierzenia czasu wykonania polecenia używa się polecenia "Measure-Command":
+Measure-Command {Get-ChildItem -Path C:\Windows}
+
+Aby zobaczyć aliasy danego polecenia używa się polecenia "Get-Alias":
+Get-Alias | ? {$_.Definition -like "Get-ChildItem"} (Wydrukuje dostępne aliasy polecenia Get-ChildItem, jakimi są dir, ls oraz gci)
+
+Przy pisaniu skryptów lepiej jednak nie używać aliasów!
+
+Żeby np. wylistować wszystkie pliki i katalogi z odstępem czasowym z partycji D, można użyć polecenia:
+ls D:\ | %{Sleep -Milliseconds 250; return $_} | Format-Table
+
+PS można używać także do uruchamiania programów. Robi się to korzystając z operatora wołania ("call"), mającego postać "&":
+& C:\Windows\notepad.exe
+
+
