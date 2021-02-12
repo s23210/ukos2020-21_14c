@@ -1,0 +1,36 @@
+1.Utwórz plik on nazwie program.c za pomocą polecenia touch, a dopiero później otwórz w aktualnie testowanym edytorze. Wpisz taką zawartość. Już na początku zaobserwujesz pewne ciekawe zjawiska (w zależności od edytora). Polecam sprawdzić nano, vi, mcedit, geany oraz atom (o ile jest) lub jedit.
+Używając vima, zaobserwować można kolorowanie składni, automatyczna tabulacja (?), możliwość uzupełnienia składni poprzez ctrl+n.
+Używając nano, zaobserwować można kolorowanie składni, przy wpisywaniu tekstu kolorem pokazuje długość znaku tabulacji (?).
+Używając mcedit, zaobserwować można kolorowanie składni, pokazywanie znaku tabulacji poprzez "<------>".
+Używając geany, zaobserwować można kolorowanie składni, możliwość "zwinięcia" funkcji, lub pętli,  możliwość uzupełnienia składni poprzez ctrl+space.
+
+2.Teraz zamień pionowe kreski na znaki hash # i zapisz jako nowy plik o nazwie nowy.c. Wykonaj taką komendę w terminalu (tam gdzie masz owe dwa pliki): 
+diff nowy.c program.c
+< 		printf("#                     #\n");
+< 		printf("#      Liczę: %d      #\n", i);
+< 		printf("#                     #\n");
+---
+> 		printf("|                     |\n");
+> 		printf("|      Liczę: %d      |\n", i);
+> 		printf("|                     |\n");
+A teraz jeszcze:
+diff -y nowy.c program.c
+#include <stdio.h>						#include <stdio.h>
+#include <stdlib.h>						#include <stdlib.h>
+
+int main(int argc, char **argv)					int main(int argc, char **argv)
+{								{
+	for (i = 0; i < 10; i++)					for (i = 0; i < 10; i++)
+	{								{
+		printf("+---------------------+\n");				printf("+---------------------+\n");
+		printf("#                     #\n");	      |			printf("|                     |\n");
+		printf("#      Liczę: %d      #\n", i);	      |			printf("|      Liczę: %d      |\n", i);
+		printf("#                     #\n");	      |			printf("|                     |\n");
+		printf("+---------------------+\n");				printf("+---------------------+\n");
+	}								}
+	return 0;							return 0;
+}								}
+
+Program porównał oba pliki oraz pokazał różnicę między nimi.
+
+
