@@ -70,4 +70,67 @@ ls D:\ | %{Sleep -Milliseconds 250; return $_} | Format-Table
 PS można używać także do uruchamiania programów. Robi się to korzystając z operatora wołania ("call"), mającego postać "&":
 & C:\Windows\notepad.exe
 
+Aby sprawdzić dostępne dyski używa się polecenia "Get-PSDrive".
+Można tu znaleźć normalne dyski windowsowe, dyski HKML i HKCU, które dają dostęp do rejestru oraz:
+-Alias (lista aliasów zdefiniowanych w bieżącej sesji)
+-Cert (magazyn certyfikatów TLS/SSL stosowanych do szyfrowania danych)
+-Env (zmienne środowiskowe w bierzącej sesji)
+-Function (wszystkie zdefiniowane w bierzącej sesji funkcje, które można uruchomić)
+-Variable (zmienne utworzone i dostępne w bierzącej sesji)
+-WSMan (dostęp do całego systemu WMI)
+
+Można także dograć dyski takie jak:
+-GH (GitHub)
+-AD - Active Directory (dysk dający dostęp do ActiveDirectory)
+
+Rejestr można przeglądać dostając się do dysku hklm:\
+cd hklm:\
+
+Aby zobaczyć programy możliwe do deinstalacji:
+cd .\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
+Ładniejsza forma:
+ls | %{Get-ItemProperty $_.pspath | Select-Object DisplayName, InstallDate, UninstallString} | Format-Table -AutoSize
+
+Można także odinstalować operatorem wołania "&" (oczywiście nie robiłem tego):
+ls | %{Get-ItemProperty $_.pspath | Select-Object DisplayName, InstallDate, UninstallString} | %{& $_.UninstallString}
+
+WMI służy do zarządzania systemem:
+Get-WmiObject -Class Win32_Product | Format-Table -AutoSize
+
+Można także wyeliminować numery z przodu poprzez:
+Get-WmiObject -Class Win32_Product | Select-Object Name, Vendor | Format-Table -AutoSize
+
+Wszystkie pakieto od "nero":
+Get-WmiObject -Class Win32_Product | ?{$_.Vendor.toLower() -like "*nero*"} | Select-Object Name, Vendor | Format-Table -AutoSize
+
+Aby odinstalować wszystkie pakiety od microsoftu (chyba oczywiste, że nie robiłem, ale spisane dla zasady, żeby coś tam zapamiętać przy przepisywaniu):
+Get-WmiObject -Class Win32_Product | ?{$_.Vendor.toLower() -like "*microsoft*"} | %{
+	$wmiProduct = $_
+    $answer = Read-Host "Uninstall '$($wmiProduct.Name)' [y/n]"
+    $answer = $answer.ToLower()
+    switch($answer) {
+        "y" {
+            Write-Host -NoNewline -ForegroundColor Red "Removing: "
+            Write-Host -ForegroundColor White "$($wmiProduct.Name)"
+            # odkomentowanie poniższej lini spowoduje błąd braku uprawnień dla Twojego konta
+            #$wmiProduct.Uninstall()
+        }
+	"n" {Write-Host "Ok. Skipping."}
+        default {Write-Host -ForegroundColor Red "Unexpected value. Skipping uninstalling it."}
+    }
+}
+
+W PS można także tworzyć Popup'y.
+Aby to zrobić trzeba na początku załądować odpowiednią bibliotekę:
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+
+$icoPath = Get-Process -id $pid | Select-Object -ExpandProperty Path
+$myNotification = New-Object System.Windows.Forms.NotifyIcon
+$myNotification.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($icoPath)
+$myNotification.BalloonTipIcon = 'Error'
+$myNotification.BalloonTipText = "2 SEMESTRZE NADCHODZE" 
+$myNotification.BalloonTipTitle = "ZDALEM"
+$myNotification.Visible = $True 
+$myNotification.ShowBalloonTip(10000)
+
 
